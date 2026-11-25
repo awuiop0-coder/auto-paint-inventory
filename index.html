@@ -272,7 +272,7 @@
       <div class="bg-white rounded-2xl p-4 card-shadow flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 class="font-bold text-psNavy text-base">ประวัติเบิก - รับเข้า & ดึงสินค้าคืนคลัง</h2>
-          <p class="text-xs text-slate-500">กดปุ่มดินสอเพื่อแก้ไขจำนวนย้อนหลัง หรือกด "ดึงคืนเข้าคลัง" หากเผลอกดเบิกเกินจำนวนจริง</p>
+          <p class="text-xs text-slate-500">กดปุ่มดินสอเพื่อแก้ไขจำนวนย้อนหลัง กด "ดึงคืนเข้าคลัง" หากเผลอกดเบิกเกิน หรือกดถังขยะเพื่อลบรายการและปรับสต็อกคืน</p>
         </div>
         <select id="filterLogType" onchange="renderLogsTable()" class="px-3 py-2 rounded-xl bg-slate-100 text-sm text-slate-700 focus:outline-none">
           <option value="">-- ทุกประเภทรายการ --</option>
@@ -323,7 +323,7 @@
     </button>
   </nav>
 
-  <!-- MODAL 1: EDIT INVENTORY ITEM (ปุ่มดินสอแก้ไขวัสดุ) -->
+  <!-- MODAL 1: EDIT INVENTORY ITEM -->
   <div id="editItemModal" class="fixed inset-0 bg-psNavy/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b pb-3">
@@ -432,7 +432,7 @@
     </div>
   </div>
 
-  <!-- MODAL 3: TRANSACTION (เบิกออก / รับเข้า) -->
+  <!-- MODAL 3: TRANSACTION -->
   <div id="transactionModal" class="fixed inset-0 bg-psNavy/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b pb-3">
@@ -467,7 +467,7 @@
     </div>
   </div>
 
-  <!-- MODAL 4: EDIT LOG ENTRY (แก้ไขรายการเข้า/ออกย้อนหลัง) -->
+  <!-- MODAL 4: EDIT LOG ENTRY -->
   <div id="editLogModal" class="fixed inset-0 bg-psNavy/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b pb-3">
@@ -530,7 +530,6 @@
     let webAppUrl = localStorage.getItem(STORAGE_KEY_URL) || '';
     let lastUndoAction = null;
 
-    // Default Mock Data
     let inventory = [
       { id: 'PNT-001', name: 'สีรองพื้นเกาะเหล็ก Epoxy Primer 2K', category: 'สีพ่นและรองพื้น', stage: 'เคาะ', qty: 3, minQty: 5, unit: 'แกลลอน', price: 850 },
       { id: 'PUT-002', name: 'สีโป๊วเหลือง Polyester Putty (พร้อมน้ำยา)', category: 'สีโป๊วและน้ำยา', stage: 'โป๊วสี', qty: 8, minQty: 4, unit: 'กระป๋อง', price: 320 },
@@ -671,7 +670,6 @@
     }
 
     function renderDashboard() {
-      // Popular / Top Stock
       const popContainer = document.getElementById('dashboard-popular-list');
       const top4 = inventory.slice(0, 4);
       popContainer.innerHTML = top4.map((item, idx) => {
@@ -691,7 +689,6 @@
         `;
       }).join('');
 
-      // Stage Chart
       const stages = ['เคาะ', 'โป๊วสี', 'พ่นสี', 'ขัดสี'];
       const chartContainer = document.getElementById('dashboard-chart');
       const stageStats = stages.map(st => {
@@ -715,7 +712,6 @@
         `;
       }).join('');
 
-      // Alerts List
       const alertContainer = document.getElementById('dashboard-alerts-list');
       const alerts = inventory.filter(i => Number(i.qty) <= Number(i.minQty));
       if (alerts.length === 0) {
@@ -782,6 +778,9 @@
                 <button onclick="openEditItemModal('${item.id}')" title="แก้ไขชื่อ / ราคา / จำนวน" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-psYellow text-amber-700 hover:text-psNavy flex items-center justify-center transition border border-amber-200">
                   <i data-lucide="pencil" class="w-4 h-4"></i>
                 </button>
+                <button onclick="deleteInventoryItem('${item.id}')" title="ลบรายการวัสดุนี้" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-600 text-red-600 hover:text-white flex items-center justify-center transition border border-red-200">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -832,6 +831,9 @@
                 <button onclick="openEditLogModal('${log.id}')" title="แก้ไขจำนวนรายการนี้" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-psIndigo text-slate-600 hover:text-white flex items-center justify-center transition">
                   <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                 </button>
+                <button onclick="deleteLogItem('${log.id}')" title="ลบประวัตินี้และปรับสต็อกคืน" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-600 text-red-600 hover:text-white flex items-center justify-center transition border border-red-200">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -840,7 +842,7 @@
       lucide.createIcons();
     }
 
-    // --- EDIT INVENTORY ITEM (ปุ่มดินสอ) ---
+    // --- EDIT & DELETE INVENTORY ITEM ---
     function openEditItemModal(id) {
       const item = inventory.find(i => i.id === id);
       if (!item) return;
@@ -870,6 +872,20 @@
       showToast('บันทึกการแก้ไขข้อมูลวัสดุแล้ว');
 
       await postToSheets({ action: 'edit_item', item });
+    }
+
+    async function deleteInventoryItem(itemId) {
+      const item = inventory.find(i => i.id === itemId);
+      if (!item) return;
+
+      const confirmed = confirm(`ยืนยันลบรายการ "${item.name}" (${item.id}) ออกจากคลังวัสดุใช่หรือไม่?`);
+      if (!confirmed) return;
+
+      inventory = inventory.filter(i => i.id !== itemId);
+      refreshAllViews();
+      showToast(`ลบรายการ "${item.name}" แล้ว`);
+
+      await postToSheets({ action: 'delete_item', id: itemId });
     }
 
     // --- ADD NEW ITEM ---
@@ -989,7 +1005,7 @@
       await postToSheets({ action: 'transaction', item, log: logEntry });
     }
 
-    // --- RETURN ITEM TO INVENTORY (ดึงสินค้าคืนคลังอัตโนมัติ) ---
+    // --- RETURN, EDIT & DELETE LOGS ---
     function setQuickUndo(logEntry) {
       lastUndoAction = logEntry;
       const banner = document.getElementById('quickUndoBanner');
@@ -1047,7 +1063,6 @@
       });
     }
 
-    // --- EDIT LOG ENTRY (แก้ไขประวัติเข้า/ออกย้อนหลัง) ---
     function openEditLogModal(logId) {
       const log = logs.find(l => l.id === logId);
       if (!log) return;
@@ -1091,6 +1106,36 @@
         logId: log.id,
         newQty,
         note: newNote
+      });
+    }
+
+    async function deleteLogItem(logId) {
+      const targetLog = logs.find(l => l.id === logId);
+      if (!targetLog) return;
+
+      const effectText = targetLog.type === 'เบิกออก'
+        ? `ระบบจะบวก "${targetLog.itemName}" คืนเข้าคลัง ${targetLog.qty} ${targetLog.unit}`
+        : `ระบบจะหัก "${targetLog.itemName}" ออกจากคลัง ${targetLog.qty} ${targetLog.unit}`;
+
+      const confirmed = confirm(`ยืนยันลบรายการ "${targetLog.type}" (${targetLog.itemName} จำนวน ${targetLog.qty} ${targetLog.unit}) ใช่หรือไม่?\n${effectText}`);
+      if (!confirmed) return;
+
+      const item = inventory.find(i => i.id === targetLog.itemId);
+      if (item) {
+        if (targetLog.type === 'เบิกออก') {
+          item.qty = Number(item.qty) + Number(targetLog.qty);
+        } else if (targetLog.type === 'รับเข้า' || targetLog.type === 'คืนคลัง') {
+          item.qty = Math.max(0, Number(item.qty) - Number(targetLog.qty));
+        }
+      }
+
+      logs = logs.filter(l => l.id !== logId);
+      refreshAllViews();
+      showToast('ลบรายการประวัติและปรับยอดสต็อกคืนเรียบร้อย');
+
+      await postToSheets({
+        action: 'delete_log',
+        logId: targetLog.id
       });
     }
 
